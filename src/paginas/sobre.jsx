@@ -77,61 +77,6 @@ const displayCards = [
   },
 ];
 
-  useEffect(() => {
-    const scene = spiralSceneRef.current;
-    if (!scene) return;
-
-    const cards = [...scene.querySelectorAll('.sobre-display-card')];
-    const lerp = (a, b, t) => a + (b - a) * t;
-
-    const onScroll = () => {
-      const section = document.getElementById('sobre');
-      if (!section) return;
-      const rect = section.getBoundingClientRect();
-      const vh = window.innerHeight;
-      const progress = Math.max(0, Math.min(1,
-        (-rect.top + vh * 0.2) / (rect.height * 0.7)
-      ));
-
-      cards.forEach((card, i) => {
-        const stepX = 180;
-        const stepY = 85;
-        const stepZ = -40;
-        const startX = i * stepX;
-        const startY = i * stepY;
-        const startZ = i * stepZ;
-        const startRy = i === 0 ? 0 : -10;
-        const totalStepsShift = progress * (cards.length - 1);
-        const tx = startX - (totalStepsShift * stepX);
-        const ty = startY - (totalStepsShift * stepY);
-        const tz = startZ - (totalStepsShift * stepZ);
-        const ry = startRy - (totalStepsShift * -6);
-        const rx = -4;
-        card.style.transform = `translate(-50%, -50%) translate3d(${tx}px, ${ty}px, ${tz}px) rotateY(${ry}deg) rotateX(${rx}deg)`;
-        
-        card.style.zIndex = Math.round(500 - Math.abs(tx));
-
-      
-        const absX = Math.abs(tx);
-        if (absX < 60) {
-          card.style.opacity = "1";
-          card.style.filter = "grayscale(0) blur(0px)";
-          card.style.borderColor = "rgba(120, 220, 70, 0.8)";
-        } else {
-     
-          const fade = Math.max(0.25, 1 - (absX - 60) / 280);
-          card.style.opacity = `${fade}`;
-          card.style.filter = `grayscale(${0.75 * (1 - fade)})`;
-          card.style.borderColor = "rgba(69, 147, 30, 0.35)";
-        }
-      });
-    };
-
-    window.addEventListener('scroll', onScroll, { passive: true });
-    onScroll();
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
-
 export default function Sobre() {
   const canvasRef = useRef(null);
   const mouseRef = useRef({ x: 0, y: 0 });
@@ -258,15 +203,20 @@ export default function Sobre() {
         const cardOffset = i * 0.18; 
         const rawP = Math.max(0, Math.min(1, (progress - cardOffset) / (1 - (cards.length - 1) * 0.08)));
         const p = rawP * rawP * (3 - 2 * rawP);
+        
+        // Definição correta das variáveis iniciais e finais de animação
         const startX = i * 165;
         const startY = i * 75;
         const startZ = -i * 50;
         const startRy = i === 0 ? 0 : -12;
         const startRx = -4;
+
+        const finalX = (i - 2) * 165; // Adicionado a definição do finalX que faltava
         const finalY = (i - 2) * 75;
         const finalZ = -Math.abs(i - 2) * 40;
         const finalRy = (i - 2) * -12;
         const finalRx = -4;
+
         const tx = lerp(startX, finalX, p);
         const ty = lerp(startY, finalY, p);
         const tz = lerp(startZ, finalZ, p);
@@ -274,7 +224,6 @@ export default function Sobre() {
         const rx = lerp(startRx, finalRx, p);
 
         card.style.transform = `translate(-50%, -50%) translate3d(${tx}px, ${ty}px, ${tz}px) rotateY(${ry}deg) rotateX(${rx}deg)`;
-
         card.style.zIndex = Math.round(100 + tz);
 
         const distanceFromCenter = Math.abs(tx);

@@ -1,5 +1,6 @@
 import Comeco from "./paginas/comeco";
 import Sobre from "./paginas/sobre";
+import Clientes from "./paginas/clientes";
 
 //npm run deploy
 
@@ -12,7 +13,7 @@ export default function App() {
     <>
       <Comeco />
       <Sobre />
-      
+      <Clientes />
     </>
   );
 }

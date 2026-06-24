@@ -8,6 +8,12 @@ const CARDS = [
     desc: "Anos de experiência em montagem e manutenção industrial com excelência comprovada.",
     bg: "#e8e8e2",
     color: "#111111",
+    icon: (
+      <svg width="32" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="8" r="4"/>
+        <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+      </svg>
+    ),
   },
   {
     tag: "Qualidade",
@@ -15,6 +21,14 @@ const CARDS = [
     desc: "Construímos relações duradouras com grandes empresas baseadas em confiança mútua.",
     bg: "#e8e8e2",
     color: "#111111",
+    icon: (
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+        <circle cx="9" cy="7" r="4"/>
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+      </svg>
+    ),
   },
   {
     tag: "Confiança",
@@ -22,13 +36,19 @@ const CARDS = [
     desc: "Do planejamento à execução, entregamos resultados que superam expectativas.",
     bg: "#e8e8e2",
     color: "#111111",
+    icon: (
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="9 11 12 14 22 4"/>
+        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+      </svg>
+    ),
   },
 ];
 
 const GAP_OFFSETS  = [-1, 0, 1];
 const FLIP_DELAYS  = [0, 0.12, 0.24];
-const CARD_TILTS   = [-8, 3, -5];   // graus de rotação Z de cada card
-const CARD_TY      = [12, -8, 6];   // deslocamento Y leve pra parecer jogado
+const CARD_TILTS   = [-8, 3, -5];
+const CARD_TY      = [12, -8, 6];
 
 export default function Sobre() {
   const sectionRef    = useRef(null);
@@ -36,6 +56,7 @@ export default function Sobre() {
   const overlayRef    = useRef(null);
   const engrenagemRef = useRef(null);
   const hintRef       = useRef(null);
+  const tituloRef     = useRef(null);
   const panelRefs     = useRef([]);
   const rafRef        = useRef(null);
 
@@ -64,18 +85,10 @@ export default function Sobre() {
     const rb   = Math.round(lerp(48, 4, p1));
     const wPx  = Math.round(vw * wPct / 100);
     const hPx  = Math.round(vh * hPct / 100);
-    // topo em px fixo para curva visualmente consistente
     const rt   = Math.round(lerp(Math.min(wPx, hPx) * 0.55, 8, p1));
     wrap.style.width        = `${wPx}px`;
     wrap.style.height       = `${hPx}px`;
     wrap.style.borderRadius = `${rt}px ${rt}px ${rb}px ${rb}px`;
-
-    // ── FASE 2 (0.45 → 0.60): overlay + engrenagem aparecem
-    const p2      = easeCubic(clamp((raw - 0.45) / 0.15, 0, 1));
-    const fadeOut = 1 - easeCubic(clamp((raw - 0.68) / 0.10, 0, 1));
-    const alpha   = p2 * fadeOut;
-    if (overlayRef.current)    overlayRef.current.style.opacity    = alpha;
-    if (engrenagemRef.current) engrenagemRef.current.style.opacity = alpha;
 
     // ── FASE 3 (0.62 → 0.72): painéis se separam + gaps aparecem
     const pSplit = easeCubic(clamp((raw - 0.62) / 0.10, 0, 1));
@@ -86,20 +99,39 @@ export default function Sobre() {
     const pVolta  = easeCubic(clamp((raw - 0.80) / 0.14, 0, 1));
     const recuoZ  = lerp(0, -320, pRecuo) * (1 - pVolta);
 
-    // ── FASE 4 (0.72 → 1.0): cada painel (frente=imagem, verso=card) vira
+    // ── FASE 2 (0.45 → 0.60): overlay + engrenagem aparecem e recuam junto com painéis
+    const p2      = easeCubic(clamp((raw - 0.45) / 0.15, 0, 1));
+    const fadeOut = 1 - easeCubic(clamp((raw - 0.68) / 0.10, 0, 1));
+    const alpha   = p2 * fadeOut;
+    if (overlayRef.current) {
+      overlayRef.current.style.opacity   = alpha;
+      overlayRef.current.style.transform = `translateZ(${recuoZ}px)`;
+    }
+    if (engrenagemRef.current) {
+      engrenagemRef.current.style.opacity   = alpha;
+      engrenagemRef.current.style.transform = `translateZ(${recuoZ}px)`;
+    }
+
+    // ── FASE 4 (0.72 → 1.0): cada painel vira
     panelRefs.current.forEach((panel, i) => {
       if (!panel) return;
       const tx        = lerp(0, GAP_OFFSETS[i] * gapPx * 5, pSplit);
       const flipStart = 0.72 + FLIP_DELAYS[i] * 0.4;
       const flipP     = easeCubic(clamp((raw - flipStart) / 0.22, 0, 1));
       const deg       = lerp(0, 180, flipP);
-      // tilt e escala entram só depois do flip (flipP > 0.5)
       const settle    = easeCubic(clamp((flipP - 0.5) / 0.5, 0, 1));
       const tilt      = lerp(0, CARD_TILTS[i], settle);
       const ty        = lerp(0, CARD_TY[i], settle);
-      const scale     = lerp(1, 0.78, settle);
+      const scale     = lerp(1, 0.65, settle);
       panel.style.transform = `translateX(${tx}px) translateZ(${recuoZ}px) rotateY(${deg}deg) rotateZ(${tilt}deg) translateY(${ty}px) scale(${scale})`;
     });
+
+    // ── FASE 5 (0.92 → 1.0): título final aparece no topo
+    if (tituloRef.current) {
+      const pTitulo = easeCubic(clamp((raw - 0.92) / 0.08, 0, 1));
+      tituloRef.current.style.opacity   = pTitulo;
+      tituloRef.current.style.transform = `translateY(${lerp(-40, 0, pTitulo)}px)`;
+    }
 
     // ── Dica de scroll
     if (hintRef.current) hintRef.current.classList.toggle("oculto", raw > 0.08);
@@ -123,6 +155,15 @@ export default function Sobre() {
   return (
     <section className="secao-sobre" ref={sectionRef}>
       <div className="sobre-sticky">
+
+        {/* TÍTULO FINAL — aparece no topo após os cards virarem */}
+        <div
+          ref={tituloRef}
+          className="sobre-titulo-final"
+          style={{ opacity: 0, transform: "translateY(-40px)" }}
+        >
+          Por que escolher a <span>Souza?</span>
+        </div>
 
         {/* WRAPPER GERAL — abre com border-radius, contém tudo */}
         <div className="sobre-wrap" ref={wrapRef}>
@@ -149,9 +190,12 @@ export default function Sobre() {
 
                 {/* VERSO: card colorido */}
                 <div className="ssc-back" style={{ background: card.bg, color: card.color }}>
-                  <span className="ssc-tag">{card.tag}</span>
-                  <h3 className="ssc-title">{card.title}</h3>
-                  <p className="ssc-desc">{card.desc}</p>
+                  <div className="ssc-icon">{card.icon}</div>
+                  <div className="ssc-bottom">
+                    <span className="ssc-tag">{card.tag}</span>
+                    <h3 className="ssc-title">{card.title}</h3>
+                    <p className="ssc-desc">{card.desc}</p>
+                  </div>
                 </div>
               </div>
             ))}
@@ -182,12 +226,6 @@ export default function Sobre() {
             </svg>
           </div>
 
-        </div>
-
-        {/* DICA DE SCROLL */}
-        <div className="sobre-scroll-hint" ref={hintRef}>
-          <span>scroll</span>
-          <div className="sobre-scroll-linha" />
         </div>
 
       </div>

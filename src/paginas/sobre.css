@@ -135,45 +135,6 @@
   letter-spacing: 0.01em;
 }
 
-
-/* ───────────────────────────────────────────
-   DICA DE SCROLL (some conforme o usuário rola)
-─────────────────────────────────────────── */
-.sobre-scroll-hint {
-  position: absolute;
-  bottom: 32px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  color: rgba(197, 255, 197, 0.45);
-  font-family: 'Cy Grotesk Wide', sans-serif;
-  font-weight: 400;
-  font-size: 10px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  z-index: 20;
-  transition: opacity 0.4s ease;
-  pointer-events: none;
-}
-
-.sobre-scroll-hint.oculto {
-  opacity: 0;
-}
-
-.sobre-scroll-linha {
-  width: 1px;
-  height: 36px;
-  background: linear-gradient(
-    to bottom,
-    transparent,
-    rgba(46, 204, 26, 0.6)
-  );
-  animation: pulseLinha 1.8s ease-in-out infinite;
-}
-
 @keyframes pulseLinha {
   0%, 100% { opacity: 0.3; transform: scaleY(0.6); }
   50%       { opacity: 1;   transform: scaleY(1); }
@@ -209,6 +170,7 @@
   width: 28vw;
   height: 55vh;
   border-radius: 80% 80% 48px 48px / 80% 80% 48px 48px;
+  perspective: 1200px;
 }
 
 /* painéis lado a lado, cobrem o wrap */
@@ -254,16 +216,31 @@
   transform: rotateY(180deg);
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  gap: 8px;
+  justify-content: space-between;
   padding: 20px 18px;
   border-radius: 16px;
   overflow: hidden;
 }
 
+.ssc-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 68px;
+  height: 68px;
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+
+.ssc-bottom {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 .ssc-tag {
   font-family: 'Cy Grotesk Wide', sans-serif;
-  font-size: 10px;
+  font-size: 15px;
   font-weight: 1000;
   letter-spacing: 0.2em;
   text-transform: uppercase;
@@ -272,22 +249,22 @@
 
 .ssc-title {
   font-family: 'Cy Grotesk Wide', sans-serif;
-  font-size: clamp(14px, 2vw, 20px);
+  font-size: 50px;
   font-weight: 1000;
-  line-height: 1.2;
+  line-height: 1.15;
   margin: 0;
 }
 
 .ssc-desc {
   font-family: 'Cy Grotesk Wide', sans-serif;
-  font-size: clamp(11px, 1.2vw, 14px);
+  font-size: 20px;
   font-weight: 400;
   line-height: 1.55;
   opacity: 0.8;
   margin: 0;
 }
 
-/* overlay sobre os painéis */
+/* overlay sobre os painéis — irmão do wrap dentro do sticky */
 .sobre-overlay {
   position: absolute;
   inset: 0;
@@ -295,10 +272,11 @@
   align-items: flex-end;
   justify-content: flex-start;
   padding: 64px;
-  background: linear-gradient(to top, rgba(1,25,1,0.92) 0%, rgba(1,25,1,0.5) 35%, transparent 65%);
+  background: linear-gradient(to top, rgba(1,25,1,0.72) 0%, rgba(1,25,1,0.3) 35%, transparent 65%);
   pointer-events: none;
   z-index: 10;
   transition: none;
+  will-change: opacity, transform;
 }
 
 /* engrenagem */
@@ -306,6 +284,7 @@
   position: absolute;
   top: clamp(1rem, 2.5vw, 1.8rem);
   right: clamp(1rem, 2.5vw, 1.8rem);
+  will-change: opacity, transform;
   width: clamp(40px, 5vw, 64px);
   height: clamp(40px, 5vw, 64px);
   z-index: 15;
@@ -328,4 +307,34 @@
   box-shadow: 0 0 0 300px #011901;
   pointer-events: none;
   z-index: 5;
+}
+/* ───────────────────────────────────────────
+   TÍTULO FINAL — aparece no topo após os cards virarem
+─────────────────────────────────────────── */
+.sobre-titulo-final {
+  position: absolute;
+  top: clamp(28px, 4vh, 52px);
+  left: 0;
+  right: 0;
+  text-align: center;
+  z-index: 20;
+  pointer-events: none;
+  font-family: 'Cy Grotesk Wide', sans-serif;
+  font-weight: 1000;
+  font-size: clamp(20px, 2.8vw, 38px);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(197, 255, 197, 0.85);
+  will-change: opacity, transform;
+}
+
+.sobre-titulo-final span {
+  background: radial-gradient(
+    circle at 50% 0%,
+    rgba(197, 255, 197, 0.95),
+    rgba(78, 146, 45, 0.9)
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }

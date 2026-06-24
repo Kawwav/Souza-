@@ -1,0 +1,195 @@
+/* ───────────────────────────────────────────
+   SEÇÃO CLIENTES
+─────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@900&display=swap');
+
+.clientes-secao {
+  background-color: #011901;
+  padding: 80px 0 0;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  width: 100%;
+}
+
+/* ── Logos miniatura ── */
+.clientes-logos-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+  padding: 0 24px;
+}
+
+.clientes-logo-pill {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  overflow: hidden;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease;
+}
+
+.clientes-logo-pill:hover {
+  transform: scale(1.18);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.clientes-logo-pill img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  user-select: none;
+  pointer-events: none;
+}
+
+/* ── Label ── */
+.clientes-label-wrap {
+  overflow: hidden;
+  line-height: 1;
+  margin-bottom: 0;
+}
+
+.clientes-label {
+  font-family: 'Cy Grotesk Wide', sans-serif;
+  font-size: clamp(11px, 1.2vw, 14px);
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #ffffff;
+  margin: 0;
+  text-align: center;
+  display: block;
+}
+
+/* ── SOUZA / CLIENTE gigante ── */
+.clientes-titulo-wrap {
+  width: 100%;
+  text-align: center;
+  line-height: 1;
+  margin-top: 0px;
+  overflow: hidden;
+}
+
+.clientes-titulo-inner {
+  position: relative;
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  line-height: 0.85;
+}
+
+.clientes-titulo-souza,
+.clientes-titulo-cliente {
+  display: block;
+  width: 100%;
+  text-align: center;
+  font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+  font-size: clamp(120px, 24vw, 360px);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  line-height: 0.85;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.clientes-titulo-cliente {
+  color: #1a4a0a;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  text-align: center;
+}
+
+/* ── Letras individuais ── */
+.letra {
+  display: inline-block;
+  will-change: transform;
+  transition: transform 0.55s cubic-bezier(0.76, 0, 0.24, 1);
+}
+
+/* ═══════════════════════════════════════════
+   ESTADOS DAS LETRAS POR PHASE
+   ═══════════════════════════════════════════
+
+   Souza:
+     idle          → Y:  0%   (visível)
+     client-visible → Y: -100% (saiu para cima)
+     switch-out    → Y: -100% (continua fora)
+     switch-prewait → Y: -100% (continua fora)
+     switch-in     → Y: -100% (continua fora)
+
+   Cliente:
+     idle           → Y: 100%  (abaixo, invisível)
+     client-visible → Y:  0%   (visível)
+     switch-out     → Y: -100% (saiu para cima)
+     switch-prewait → Y: 100%  (reposicionado abaixo, SEM transição)
+     switch-in      → Y:  0%   (entra de baixo)
+═══════════════════════════════════════════ */
+
+/* ── letra-souza: padrão = visível (Y:0) ── */
+.letra-souza {
+  color: #ffffff;
+  transform: translateY(0%);
+}
+
+/* Souza sai para cima em todas as fases com cliente ativo */
+.clientes-titulo-wrap.phase-client-visible .letra-souza,
+.clientes-titulo-wrap.phase-switch-out .letra-souza,
+.clientes-titulo-wrap.phase-switch-prewait .letra-souza,
+.clientes-titulo-wrap.phase-switch-in .letra-souza {
+  transform: translateY(-100%);
+}
+
+/* ── letra-cliente: padrão = abaixo (Y:100%) ── */
+.letra-cliente {
+  color: #1a4a0a;
+  transform: translateY(100%);
+}
+
+/* Cliente visível */
+.clientes-titulo-wrap.phase-client-visible .letra-cliente {
+  transform: translateY(0%);
+}
+
+/* Cliente saindo: sobe para cima (igual ao Souza) */
+.clientes-titulo-wrap.phase-switch-out .letra-cliente {
+  transform: translateY(-100%);
+}
+
+/* Novo nome posicionado embaixo SEM transição (pronto para animar) */
+.clientes-titulo-wrap.phase-switch-prewait .letra-cliente {
+  transform: translateY(100%);
+  transition: none; /* sem animação ao reposicionar */
+}
+
+/* Novo nome entra vindo de baixo */
+.clientes-titulo-wrap.phase-switch-in .letra-cliente {
+  transform: translateY(0%);
+}
+
+/* ── Responsivo ── */
+@media (max-width: 768px) {
+  .clientes-secao {
+    padding: 60px 0 0;
+  }
+
+  .clientes-logo-pill {
+    width: 52px;
+    height: 52px;
+    border-radius: 12px;
+  }
+
+  .clientes-logos-row {
+    gap: 8px;
+  }
+}

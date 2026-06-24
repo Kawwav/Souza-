@@ -13,5 +13,10 @@ html, body, #root {
 
 body {
   background-color: #011901;
+  background-image: url('/fundoverde.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
   overflow-x: hidden;
 }

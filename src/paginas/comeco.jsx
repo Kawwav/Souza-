@@ -33,6 +33,8 @@ export default function Comeco() {
   const [faseTexto, setFaseTexto] = useState("visivel");
   const [menuAberto, setMenuAberto] = useState(false);
   const [hamburgerVisivel, setHamburgerVisivel] = useState(false);
+  const [faseMarrelo, setFaseMarrelo] = useState(null); // null | 'descendo' | 'batendo' | 'subindo'
+  const [sacudindo, setSacudindo] = useState(false);
 
   useEffect(() => {
     document.body.style.overflow = "hidden";
@@ -62,18 +64,69 @@ export default function Comeco() {
     faseFundo === "chegou"  ? "comeco-fundo--chegou"  : "",
   ].filter(Boolean).join(" ");
 
+  const rastroClasse = [
+    "comeco-rastro",
+    faseFundo === "subindo" ? "comeco-rastro--subindo" : "",
+    faseFundo === "chegou"  ? "comeco-rastro--chegou"  : "",
+  ].filter(Boolean).join(" ");
+
 return (
     <section style={{ height: "100vh", position: "relative" }}>
+      {/* ── Martelo ── */}
+      {faseMarrelo && (
+        <img
+          src="martelo.png"
+          alt=""
+          aria-hidden="true"
+          className={`comeco-martelo comeco-martelo--${faseMarrelo}`}
+        />
+      )}
+
       {/* ── Hambúrguer ── */}
       <button
-        className={`comeco-hamburguer ${menuAberto ? "comeco-hamburguer--aberto" : ""} ${hamburgerVisivel ? "comeco-hamburguer--visivel" : ""}`}
-        onClick={() => setMenuAberto(v => !v)}
+        className={`comeco-hamburguer ${menuAberto ? "comeco-hamburguer--aberto" : ""} ${hamburgerVisivel ? "comeco-hamburguer--visivel" : ""} ${sacudindo ? "comeco-hamburguer--sacudindo" : ""}`}
+        onClick={() => {
+
+          if (menuAberto) { setMenuAberto(false); return; }
+          // Sequência do martelo: desce devagar → pausa → bate → hambúrguer abre → martelo sobe
+          setFaseMarrelo("descendo");
+          setTimeout(() => setFaseMarrelo("batendo"), 700);
+          setTimeout(() => { setSacudindo(true); setMenuAberto(true); }, 950);
+          setTimeout(() => { setFaseMarrelo("subindo"); setSacudindo(false); }, 1150);
+          setTimeout(() => setFaseMarrelo(null), 1700);
+        }}
         aria-label={menuAberto ? "Fechar menu" : "Abrir menu"}
       >
         <span className="comeco-hamburguer__linha" />
         <span className="comeco-hamburguer__linha" />
         <span className="comeco-hamburguer__linha" />
       </button>
+
+      {/* ── Overlay escuro do menu ── */}
+      <div
+        className={`comeco-menu-overlay ${menuAberto ? "comeco-menu-overlay--ativo" : ""}`}
+        onClick={() => setMenuAberto(false)}
+        aria-hidden="true"
+      />
+
+      {/* ── Menu Drawer ── */}
+      <nav
+        className={`comeco-menu ${menuAberto ? "comeco-menu--aberto" : ""}`}
+        aria-label="Menu principal"
+      >
+        <div className="comeco-menu__linha-deco" aria-hidden="true" />
+        <ul className="comeco-menu__lista">
+          <li className="comeco-menu__item">
+            <a href="#home" className="comeco-menu__link" onClick={() => setMenuAberto(false)}>Home</a>
+          </li>
+          <li className="comeco-menu__item">
+            <a href="#sobre" className="comeco-menu__link" onClick={() => setMenuAberto(false)}>Sobre</a>
+          </li>
+          <li className="comeco-menu__item">
+            <a href="#servicos" className="comeco-menu__link" onClick={() => setMenuAberto(false)}>Serviços</a>
+          </li>
+        </ul>
+      </nav>
 
       {/* ── Texto SOUZA (z-index 1) ── */}
       <div
@@ -85,6 +138,9 @@ return (
           <span className="comeco-fundo-texto__sub">MONTAGEM INDUSTRIAL</span>
         </div>
       </div>
+
+      {/* ── Rastro (z-index 1, atrás do industrial) ── */}
+      <div className={rastroClasse} aria-hidden="true" />
 
       {/* ── Imagem industrial (z-index 2) ── */}
       <div className={fundoClasse} aria-hidden="true" />

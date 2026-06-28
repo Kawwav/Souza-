@@ -6,48 +6,98 @@
 .clientes-secao {
   background-color: #011901;
   padding: 80px 0 0;
-  overflow: hidden;
+  overflow: visible;
   position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  min-height: 100vh;
+  height: 100vh;
   width: 100%;
 }
 
-/* ── Logos miniatura ── */
-.clientes-logos-row {
+/* ═══════════════════════════════════════════
+   CARROSSEL
+   ═══════════════════════════════════════════ */
+
+.carrossel-viewport {
+  width: 100%;
+  overflow: hidden;
+  margin-bottom: 48px;
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    black 8%,
+    black 92%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    black 8%,
+    black 92%,
+    transparent 100%
+  );
+}
+
+.carrossel-track {
+  display: flex;
+  gap: 16px;
+  width: max-content;
+  will-change: transform;
+}
+
+.carrossel-item {
+  flex-shrink: 0;
+}
+
+.carrossel-card {
+  width: 160px;
+  border-radius: 20px;
+  border: 1px solid #0a2e0a;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: border-color 0.25s ease;
+}
+
+.carrossel-card:hover {
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.carrossel-img-wrap {
+  width: 100%;
+  height: 130px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  margin-bottom: 28px;
-  flex-wrap: wrap;
-  padding: 0 24px;
+  padding: 20px;
+  box-sizing: border-box;
 }
 
-.clientes-logo-pill {
-  width: 64px;
-  height: 64px;
-  border-radius: 16px;
-  overflow: hidden;
-  flex-shrink: 0;
-  cursor: pointer;
-  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease;
-}
-
-.clientes-logo-pill:hover {
-  transform: scale(1.18);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
-}
-
-.clientes-logo-pill img {
+.carrossel-img-wrap img {
   width: 100%;
   height: 100%;
   object-fit: contain;
   display: block;
   user-select: none;
   pointer-events: none;
+}
+
+.carrossel-nome {
+  width: 100%;
+  padding: 10px 12px 14px;
+  text-align: center;
+  font-family: 'Cy Grotesk Wide', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-sizing: border-box;
 }
 
 /* ── Label ── */
@@ -69,112 +119,21 @@
   display: block;
 }
 
-/* ── SOUZA / CLIENTE gigante ── */
+/* ── SOUZA gigante ── */
 .clientes-titulo-wrap {
   width: 100%;
   text-align: center;
   line-height: 1;
   margin-top: 0px;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .clientes-titulo-inner {
   position: relative;
   display: block;
   width: 100%;
-  overflow: hidden;
+  overflow: visible;
   line-height: 0.85;
-}
-
-.clientes-titulo-souza,
-.clientes-titulo-cliente {
-  display: block;
-  width: 100%;
-  text-align: center;
-  font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif;
-  font-size: clamp(120px, 24vw, 360px);
-  font-weight: 900;
-  letter-spacing: -0.02em;
-  text-transform: uppercase;
-  line-height: 0.85;
-  user-select: none;
-  white-space: nowrap;
-}
-
-.clientes-titulo-cliente {
-  color: #1a4a0a;
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  text-align: center;
-}
-
-/* ── Letras individuais ── */
-.letra {
-  display: inline-block;
-  will-change: transform;
-  transition: transform 0.55s cubic-bezier(0.76, 0, 0.24, 1);
-}
-
-/* ═══════════════════════════════════════════
-   ESTADOS DAS LETRAS POR PHASE
-   ═══════════════════════════════════════════
-
-   Souza:
-     idle          → Y:  0%   (visível)
-     client-visible → Y: -100% (saiu para cima)
-     switch-out    → Y: -100% (continua fora)
-     switch-prewait → Y: -100% (continua fora)
-     switch-in     → Y: -100% (continua fora)
-
-   Cliente:
-     idle           → Y: 100%  (abaixo, invisível)
-     client-visible → Y:  0%   (visível)
-     switch-out     → Y: -100% (saiu para cima)
-     switch-prewait → Y: 100%  (reposicionado abaixo, SEM transição)
-     switch-in      → Y:  0%   (entra de baixo)
-═══════════════════════════════════════════ */
-
-/* ── letra-souza: padrão = visível (Y:0) ── */
-.letra-souza {
-  color: #ffffff;
-  transform: translateY(0%);
-}
-
-/* Souza sai para cima em todas as fases com cliente ativo */
-.clientes-titulo-wrap.phase-client-visible .letra-souza,
-.clientes-titulo-wrap.phase-switch-out .letra-souza,
-.clientes-titulo-wrap.phase-switch-prewait .letra-souza,
-.clientes-titulo-wrap.phase-switch-in .letra-souza {
-  transform: translateY(-100%);
-}
-
-/* ── letra-cliente: padrão = abaixo (Y:100%) ── */
-.letra-cliente {
-  color: #1a4a0a;
-  transform: translateY(100%);
-}
-
-/* Cliente visível */
-.clientes-titulo-wrap.phase-client-visible .letra-cliente {
-  transform: translateY(0%);
-}
-
-/* Cliente saindo: sobe para cima (igual ao Souza) */
-.clientes-titulo-wrap.phase-switch-out .letra-cliente {
-  transform: translateY(-100%);
-}
-
-/* Novo nome posicionado embaixo SEM transição (pronto para animar) */
-.clientes-titulo-wrap.phase-switch-prewait .letra-cliente {
-  transform: translateY(100%);
-  transition: none; /* sem animação ao reposicionar */
-}
-
-/* Novo nome entra vindo de baixo */
-.clientes-titulo-wrap.phase-switch-in .letra-cliente {
-  transform: translateY(0%);
 }
 
 /* ── Responsivo ── */
@@ -183,13 +142,65 @@
     padding: 60px 0 0;
   }
 
-  .clientes-logo-pill {
-    width: 52px;
-    height: 52px;
-    border-radius: 12px;
+  .carrossel-card {
+    width: 130px;
   }
 
-  .clientes-logos-row {
-    gap: 8px;
+  .carrossel-img-wrap {
+    height: 100px;
   }
+
+  .carrossel-track {
+    gap: 12px;
+  }
+}
+
+/* ═══════════════════════════════════════════
+   SOUZA SPLIT — efeito de abertura no scroll
+   ═══════════════════════════════════════════ */
+
+.clientes-souza-split-root {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+  height: clamp(102px, 20.4vw, 306px);
+}
+
+.souza-metade {
+  display: inline-block;
+  font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+  font-size: clamp(120px, 24vw, 360px);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  line-height: 0.85;
+  color: #ffffff;
+  white-space: nowrap;
+  user-select: none;
+  will-change: transform;
+  position: relative;
+  z-index: 2;
+}
+
+.souza-video-wrap {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 10;
+  z-index: 1;
+  pointer-events: none;
+  clip-path: inset(0 50% 0 50%);
+}
+
+.souza-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+  display: block;
 }

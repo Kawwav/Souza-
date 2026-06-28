@@ -1,175 +1,186 @@
-import { useRef, useState, useCallback } from "react";
+import { useRef, useEffect } from "react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import "./clientes.css";
+
+gsap.registerPlugin(ScrollTrigger);
 
 const LOGOS = [
   { src: "newholland.png", alt: "New Holland", nome: "New Holland" },
-  { src: "newholland.png", alt: "New Holland", nome: "empresa2" },
-  { src: "newholland.png", alt: "New Holland", nome: "New Hollad" },
-  { src: "newholland.png", alt: "New Holland", nome: "empresa2123" },
-  { src: "newholland.png", alt: "New Holland", nome: "123d" },
-  { src: "newholland.png", alt: "New Holland", nome: "1231nd" },
-  { src: "newholland.png", alt: "New Holland", nome: "asdawdd" },
-  { src: "newholland.png", alt: "New Holland", nome: "N123gand" },
+  { src: "newholland.png", alt: "New Holland", nome: "Empresa Dois" },
+  { src: "newholland.png", alt: "New Holland", nome: "Empresa Três" },
+  { src: "newholland.png", alt: "New Holland", nome: "Empresa Quatro" },
+  { src: "newholland.png", alt: "New Holland", nome: "Empresa Cinco" },
+  { src: "newholland.png", alt: "New Holland", nome: "Empresa Seis" },
+  { src: "newholland.png", alt: "New Holland", nome: "Empresa Sete" },
+  { src: "newholland.png", alt: "New Holland", nome: "Empresa Oito" },
 ];
 
-function splitLetters(word, className, delaysFn) {
-  const letters = word.split("");
-  const count = letters.length;
-  const center = (count - 1) / 2;
-  return letters.map((char, i) => {
-    const dist = Math.abs(i - center);
-    const delay = delaysFn(dist);
-    return (
-      <span
-        // a key inclui a palavra inteira: isso garante que o React
-        // desmonte/remonte os spans ao trocar de nome, em vez de
-        // reciclar o mesmo elemento DOM (o que impedia o reset de
-        // posição em "switch-prewait" de funcionar de forma confiável)
-        key={`${word}-${i}`}
-        className={`letra ${className}`}
-        style={{ transitionDelay: `${delay}ms` }}
-      >
-        {char === " " ? "\u00A0" : char}
-      </span>
-    );
-  });
-}
-
-const arcDelay = (dist) => dist * 55;
-
-// Duração real da transição CSS de cada letra (precisa bater com
-// `.letra { transition: transform 0.55s ... }` no clientes.css)
-const TRANSITION_MS = 550;
-
-// Calcula o delay máximo (arcDelay) que uma letra de uma palavra recebe,
-// ou seja, o delay da letra mais distante do centro
-function getMaxArcDelay(word) {
-  const count = word.length;
-  const center = (count - 1) / 2;
-  const maxDist = Math.max(center, count - 1 - center);
-  return arcDelay(maxDist);
-}
-
-// Tempo total que a palavra leva pra terminar de sair de vista
-// (delay da letra mais lenta + duração da transição + uma margem de segurança)
-function getExitDuration(word) {
-  return getMaxArcDelay(word) + TRANSITION_MS + 30;
-}
-
-// Fases da animação do título
-// "idle"           → Souza visível (Y:0), cliente abaixo (Y:100%)
-// "client-visible" → cliente visível (Y:0), Souza acima (Y:-100%)
-// "switch-out"     → cliente sai subindo (Y:-100%), igual ao Souza
-// "switch-prewait" → novo nome posicionado embaixo (Y:100%) sem transição
-// "switch-in"      → novo nome entra vindo de baixo (Y:0)
-
 export default function Clientes() {
-  const secaoRef = useRef(null);
-  const tituloWrapRef = useRef(null);
+  const secaoRef         = useRef(null);
+  const wrapperRef       = useRef(null);
+  const souzaEsquerdaRef = useRef(null);
+  const souzaDireitaRef  = useRef(null);
+  const videoWrapRef     = useRef(null);
+  const trackRef         = useRef(null);
+  const carrosselRef     = useRef(null);
+  const labelRef         = useRef(null);
 
-  // phase controla o que o CSS renderiza
-  const [phase, setPhase] = useState("idle");
-  const [clienteNome, setClienteNome] = useState("New Holland");
+  // ─── Carrossel automático infinito ───────────────────────────────────────
+  useEffect(() => {
+    const track = trackRef.current;
+    if (!track) return;
 
-  // refs para evitar closure stale
-  const phaseRef = useRef("idle");
-  const currentNomeRef = useRef(null); // null = nenhum ativo
-  const t1 = useRef(null);
-  const t2 = useRef(null);
+    const items = track.querySelectorAll(".carrossel-item");
+    items.forEach((item) => {
+      const clone = item.cloneNode(true);
+      track.appendChild(clone);
+    });
 
-  const clearTimers = () => {
-    clearTimeout(t1.current);
-    clearTimeout(t2.current);
-  };
+    let x = 0;
+    let rafId;
+    const speed = 0.5;
 
-  const setPhaseSync = (p) => {
-    phaseRef.current = p;
-    setPhase(p);
-  };
+    const animate = () => {
+      x -= speed;
+      const totalWidth = track.scrollWidth / 2;
+      if (Math.abs(x) >= totalWidth) x = 0;
+      track.style.transform = `translateX(${x}px)`;
+      rafId = requestAnimationFrame(animate);
+    };
 
-  const handleLogoEnter = useCallback((nome) => {
-    // Já está nesse nome → não faz nada
-    if (currentNomeRef.current === nome) return;
+    rafId = requestAnimationFrame(animate);
 
-    clearTimers();
+    const pause  = () => cancelAnimationFrame(rafId);
+    const resume = () => { rafId = requestAnimationFrame(animate); };
+    track.addEventListener("mouseenter", pause);
+    track.addEventListener("mouseleave", resume);
 
-    const prevNome = currentNomeRef.current;
-    currentNomeRef.current = nome;
-
-    if (prevNome === null) {
-      // ── Primeira entrada: nenhum cliente ativo ──
-      // Souza sobe, cliente vem de baixo para cima
-      setClienteNome(nome);
-      secaoRef.current?.classList.add("animating");
-      tituloWrapRef.current?.classList.add("animating");
-      setPhaseSync("client-visible");
-    } else {
-      // ── Troca entre clientes ──
-      // 1. Nome atual sobe (igual ao Souza)
-      setPhaseSync("switch-out");
-
-      // duração real da saída: precisa esperar a letra mais lenta
-      // (a mais distante do centro) terminar a transição CSS
-      const saidaDuration = getExitDuration(prevNome);
-
-      // 2. Posiciona novo nome embaixo SEM transição
-      t1.current = setTimeout(() => {
-        setClienteNome(nome);
-        setPhaseSync("switch-prewait");
-
-        // 3. Força reflow e anima para cima (vindo de baixo)
-        t2.current = setTimeout(() => {
-          setPhaseSync("switch-in");
-        }, 30);
-      }, saidaDuration);
-    }
+    return () => {
+      cancelAnimationFrame(rafId);
+      track.removeEventListener("mouseenter", pause);
+      track.removeEventListener("mouseleave", resume);
+    };
   }, []);
 
-  const handleLogoLeave = useCallback(() => {
-    clearTimers();
-    currentNomeRef.current = null;
-    setPhaseSync("idle");
-    secaoRef.current?.classList.remove("animating");
-    tituloWrapRef.current?.classList.remove("animating");
+  // ─── GSAP: efeito de abertura do SOUZA no scroll ─────────────────────────
+  useEffect(() => {
+    const esquerda  = souzaEsquerdaRef.current;
+    const direita   = souzaDireitaRef.current;
+    const videoWrap = videoWrapRef.current;
+    const secao     = secaoRef.current;
+    const wrapper   = wrapperRef.current;
+    const carrossel = carrosselRef.current;
+    const label     = labelRef.current;
+
+    if (!esquerda || !direita || !videoWrap || !secao || !wrapper) return;
+
+    gsap.set(esquerda,  { xPercent: 0 });
+    gsap.set(direita,   { xPercent: 0 });
+    // Começa fechado — clip colado no centro, alinhado com as letras juntas
+    gsap.set(videoWrap, { opacity: 1 });
+    videoWrap.style.clipPath = "inset(0 50% 0 50%)";
+    gsap.set(carrossel, { opacity: 1, y: 0 });
+    gsap.set(label,     { opacity: 1, y: 0 });
+
+    // Atualiza o clip-path do vídeo com base na posição real das letras a cada frame
+    const atualizarClip = () => {
+      const rootEl = videoWrap.parentElement;
+      if (!rootEl) return;
+      const rootRect = rootEl.getBoundingClientRect();
+      const esqRect  = esquerda.getBoundingClientRect();
+      const dirRect  = direita.getBoundingClientRect();
+
+      // clipLeft  = quanto cortar da esquerda  → vai até a borda DIREITA do "SOU"
+      // clipRight = quanto cortar da direita   → vai até a borda ESQUERDA do "ZA"
+      const clipLeft  = Math.max(0, esqRect.right  - rootRect.left);
+      const clipRight = Math.max(0, rootRect.right  - dirRect.left);
+
+      // O vídeo só aparece no GAP entre as duas metades
+      videoWrap.style.clipPath = `inset(0 ${clipRight}px 0 ${clipLeft}px)`;
+    };
+
+    const tl = gsap.timeline({
+      scrollTrigger: {
+        trigger: wrapper,
+        start: "top top",
+        end: "bottom bottom",
+        scrub: 1.2,
+        pin: secao,
+        anticipatePin: 1,
+        onUpdate: atualizarClip,
+      },
+    });
+
+    tl
+      // Carrossel sobe e some primeiro
+      .to(carrossel, { opacity: 0, y: -30, ease: "power2.in", duration: 0.35 }, 0)
+      // Label some logo depois
+      .to(label,     { opacity: 0, y: -15, ease: "power2.in", duration: 0.3  }, 0.05)
+      // Letras se abrem — o clip do vídeo acompanha via onUpdate
+      .to(esquerda,  { xPercent: -105, ease: "power2.inOut", duration: 1 }, 0.1)
+      .to(direita,   { xPercent:  105, ease: "power2.inOut", duration: 1 }, 0.1)
+      // Letras somem com fade + leve escala quando o vídeo já está aberto
+      .to([esquerda, direita], { opacity: 0, scale: 0.92, ease: "power2.in", duration: 0.35 }, 0.85);
+    // Sem .to(videoWrap, opacity) — o clip-path já controla a abertura/fechamento
+
+    return () => {
+      tl.kill();
+      ScrollTrigger.getAll().forEach((st) => st.kill());
+    };
   }, []);
 
   return (
-    <section className="clientes-secao" ref={secaoRef}>
+    <div ref={wrapperRef} style={{ position: "relative", height: "280vh", backgroundColor: "#011901" }}>
+      <section className="clientes-secao" ref={secaoRef}>
 
-      <div className="clientes-logos-row">
-        {LOGOS.map((logo, i) => (
-          <div
-            className="clientes-logo-pill"
-            key={i}
-            onMouseEnter={() => handleLogoEnter(logo.nome)}
-            onMouseLeave={handleLogoLeave}
-          >
-            <img src={logo.src} alt={logo.alt} draggable="false" />
+        {/* ── Carrossel ── */}
+        <div className="carrossel-viewport" ref={carrosselRef}>
+          <div className="carrossel-track" ref={trackRef}>
+            {LOGOS.map((logo, i) => (
+              <div className="carrossel-item" key={i}>
+                <div className="carrossel-card">
+                  <div className="carrossel-img-wrap">
+                    <img src={logo.src} alt={logo.alt} draggable="false" />
+                  </div>
+                  <span className="carrossel-nome">{logo.nome}</span>
+                </div>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
-
-      <div className="clientes-label-wrap">
-        <p className="clientes-label">Clientes que confiam na</p>
-      </div>
-
-      <div
-        className={`clientes-titulo-wrap phase-${phase}`}
-        ref={tituloWrapRef}
-      >
-        <div className="clientes-titulo-inner">
-
-          <div className="clientes-titulo-souza">
-            {splitLetters("Souza", "letra-souza", arcDelay)}
-          </div>
-
-          <div className="clientes-titulo-cliente">
-            {splitLetters(clienteNome, "letra-cliente", arcDelay)}
-          </div>
-
         </div>
-      </div>
 
-    </section>
+        <div className="clientes-label-wrap" ref={labelRef}>
+          <p className="clientes-label">Clientes que confiam na</p>
+        </div>
+
+        <div className="clientes-titulo-wrap">
+          <div className="clientes-titulo-inner">
+            <div className="clientes-titulo-souza clientes-souza-split-root">
+
+              <div className="souza-video-wrap" ref={videoWrapRef}>
+                <video
+                  className="souza-video"
+                  src="video.mp4"
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                />
+              </div>
+
+              <span className="souza-metade souza-metade-esquerda" ref={souzaEsquerdaRef}>
+                SOU
+              </span>
+              <span className="souza-metade souza-metade-direita" ref={souzaDireitaRef}>
+                ZA
+              </span>
+
+            </div>
+          </div>
+        </div>
+
+      </section>
+    </div>
   );
 }

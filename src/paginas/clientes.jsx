@@ -6,14 +6,14 @@ import "./clientes.css";
 gsap.registerPlugin(ScrollTrigger);
 
 const LOGOS = [
-  { src: "newholland.png", alt: "New Holland", nome: "New Holland" },
-  { src: "newholland.png", alt: "New Holland", nome: "Empresa Dois" },
-  { src: "newholland.png", alt: "New Holland", nome: "Empresa Três" },
-  { src: "newholland.png", alt: "New Holland", nome: "Empresa Quatro" },
-  { src: "newholland.png", alt: "New Holland", nome: "Empresa Cinco" },
-  { src: "newholland.png", alt: "New Holland", nome: "Empresa Seis" },
-  { src: "newholland.png", alt: "New Holland", nome: "Empresa Sete" },
-  { src: "newholland.png", alt: "New Holland", nome: "Empresa Oito" },
+  { src: "newholland.png", alt: "New Holland"},
+  { src: "newholland.png", alt: "New Holland"},
+  { src: "newholland.png", alt: "New Holland"},
+  { src: "newholland.png", alt: "New Holland"},
+  { src: "newholland.png", alt: "New Holland"},
+  { src: "newholland.png", alt: "New Holland"},
+  { src: "newholland.png", alt: "New Holland"},
+  { src: "newholland.png", alt: "New Holland"},
 ];
 
 export default function Clientes() {
@@ -22,11 +22,15 @@ export default function Clientes() {
   const souzaEsquerdaRef = useRef(null);
   const souzaDireitaRef  = useRef(null);
   const videoWrapRef     = useRef(null);
+  const videoCortinaRef  = useRef(null);
+  const videoCortina2Ref = useRef(null);
   const trackRef         = useRef(null);
   const carrosselRef     = useRef(null);
   const labelRef         = useRef(null);
+  const texto1Ref        = useRef(null);
+  const texto2Ref        = useRef(null);
+  const texto3Ref        = useRef(null);
 
-  // ─── Carrossel automático infinito ───────────────────────────────────────
   useEffect(() => {
     const track = trackRef.current;
     if (!track) return;
@@ -63,42 +67,56 @@ export default function Clientes() {
     };
   }, []);
 
-  // ─── GSAP: efeito de abertura do SOUZA no scroll ─────────────────────────
   useEffect(() => {
-    const esquerda  = souzaEsquerdaRef.current;
-    const direita   = souzaDireitaRef.current;
-    const videoWrap = videoWrapRef.current;
-    const secao     = secaoRef.current;
-    const wrapper   = wrapperRef.current;
-    const carrossel = carrosselRef.current;
-    const label     = labelRef.current;
+    const esquerda      = souzaEsquerdaRef.current;
+    const direita       = souzaDireitaRef.current;
+    const videoWrap     = videoWrapRef.current;
+    const videoCortina  = videoCortinaRef.current;
+    const videoCortina2 = videoCortina2Ref.current;
+    const secao         = secaoRef.current;
+    const wrapper       = wrapperRef.current;
+    const carrossel     = carrosselRef.current;
+    const label         = labelRef.current;
+    const texto1        = texto1Ref.current;
+    const texto2        = texto2Ref.current;
+    const texto3        = texto3Ref.current;
 
     if (!esquerda || !direita || !videoWrap || !secao || !wrapper) return;
 
     gsap.set(esquerda,  { xPercent: 0 });
     gsap.set(direita,   { xPercent: 0 });
-    // Começa fechado — clip colado no centro, alinhado com as letras juntas
-    gsap.set(videoWrap, { opacity: 1 });
+    gsap.set(videoWrap, { opacity: 1, scale: 1, filter: "blur(0px)", transformOrigin: "50% 50%" });
     videoWrap.style.clipPath = "inset(0 50% 0 50%)";
     gsap.set(carrossel, { opacity: 1, y: 0 });
     gsap.set(label,     { opacity: 1, y: 0 });
-
-    // Atualiza o clip-path do vídeo com base na posição real das letras a cada frame
+    if (videoCortina)  gsap.set(videoCortina,  { y: "115vh" });
+    if (videoCortina2) gsap.set(videoCortina2, { y: "115vh" });
+    if (texto1) gsap.set(texto1, { opacity: 0, y: 10 });
+    if (texto2) gsap.set(texto2, { opacity: 0, y: 10 });
+    if (texto3) gsap.set(texto3, { opacity: 0, y: 10 });
     const atualizarClip = () => {
       const rootEl = videoWrap.parentElement;
       if (!rootEl) return;
       const rootRect = rootEl.getBoundingClientRect();
       const esqRect  = esquerda.getBoundingClientRect();
       const dirRect  = direita.getBoundingClientRect();
-
-      // clipLeft  = quanto cortar da esquerda  → vai até a borda DIREITA do "SOU"
-      // clipRight = quanto cortar da direita   → vai até a borda ESQUERDA do "ZA"
       const clipLeft  = Math.max(0, esqRect.right  - rootRect.left);
       const clipRight = Math.max(0, rootRect.right  - dirRect.left);
-
-      // O vídeo só aparece no GAP entre as duas metades
       videoWrap.style.clipPath = `inset(0 ${clipRight}px 0 ${clipLeft}px)`;
+      const left  = `${clipLeft}px`;
+      const width = `${Math.max(0, rootRect.width - clipLeft - clipRight)}px`;
+
+      if (videoCortina) {
+        videoCortina.style.left  = left;
+        videoCortina.style.width = width;
+      }
+      if (videoCortina2) {
+        videoCortina2.style.left  = left;
+        videoCortina2.style.width = width;
+      }
     };
+
+    atualizarClip();
 
     const tl = gsap.timeline({
       scrollTrigger: {
@@ -109,29 +127,77 @@ export default function Clientes() {
         pin: secao,
         anticipatePin: 1,
         onUpdate: atualizarClip,
+        onRefresh: atualizarClip,
       },
     });
 
     tl
-      // Carrossel sobe e some primeiro
       .to(carrossel, { opacity: 0, y: -30, ease: "power2.in", duration: 0.35 }, 0)
-      // Label some logo depois
       .to(label,     { opacity: 0, y: -15, ease: "power2.in", duration: 0.3  }, 0.05)
-      // Letras se abrem — o clip do vídeo acompanha via onUpdate
-      .to(esquerda,  { xPercent: -105, ease: "power2.inOut", duration: 1 }, 0.1)
-      .to(direita,   { xPercent:  105, ease: "power2.inOut", duration: 1 }, 0.1)
-      // Letras somem com fade + leve escala quando o vídeo já está aberto
-      .to([esquerda, direita], { opacity: 0, scale: 0.92, ease: "power2.in", duration: 0.35 }, 0.85);
-    // Sem .to(videoWrap, opacity) — o clip-path já controla a abertura/fechamento
+      .to(esquerda,  { xPercent: -105, ease: "none", duration: 1 }, 0.1)
+      .to(direita,   { xPercent:  105, ease: "none", duration: 1 }, 0.1)
+      .to([esquerda, direita], { opacity: 0, scale: 0.92, ease: "power2.in", duration: 0.35 }, 1.1);
+
+
+    if (texto1) {
+      tl.to(texto1, { opacity: 1, y: 0, ease: "power2.out", duration: 0.3 }, 1.0)
+        .to(texto1, { opacity: 0, y: -10, ease: "power2.in", duration: 0.3 }, 1.4);
+    }
+
+    if (videoCortina) {
+      tl.to(videoCortina, {
+        y: "0vh",
+        ease: "power2.out",
+        duration: 0.8,
+      }, 1.5)
+      .to(videoWrap, {
+        scale: 0.88,
+        filter: "blur(10px)",
+        ease: "power2.out",
+        duration: 0.8,
+      }, 1.5);
+    }
+
+    if (texto2) {
+      tl.to(texto2, { opacity: 1, y: 0, ease: "power2.out", duration: 0.3 }, 2.3)
+        .to(texto2, { opacity: 0, y: -10, ease: "power2.in", duration: 0.3 }, 2.6);
+    }
+
+    if (videoCortina2) {
+      tl.to(videoCortina2, {
+        y: "0vh",
+        ease: "power2.out",
+        duration: 0.8,
+      }, 2.7)
+      .to(videoCortina, {
+        scale: 0.88,
+        filter: "blur(10px)",
+        ease: "power2.out",
+        duration: 0.8,
+        transformOrigin: "50% 50%",
+      }, 2.7);
+    }
+
+    if (texto3) {
+      tl.to(texto3, { opacity: 1, y: 0, ease: "power2.out", duration: 0.3 }, 3.5);
+    }
+
+    // Recalcula em resize (mudança de largura de tela desloca as letras)
+    const onResize = () => {
+      ScrollTrigger.refresh();
+      atualizarClip();
+    };
+    window.addEventListener("resize", onResize);
 
     return () => {
+      window.removeEventListener("resize", onResize);
       tl.kill();
       ScrollTrigger.getAll().forEach((st) => st.kill());
     };
   }, []);
 
   return (
-    <div ref={wrapperRef} style={{ position: "relative", height: "280vh", backgroundColor: "#011901" }}>
+    <div ref={wrapperRef} style={{ position: "relative", height: "630vh", backgroundColor: "#011901" }}>
       <section className="clientes-secao" ref={secaoRef}>
 
         {/* ── Carrossel ── */}
@@ -143,7 +209,6 @@ export default function Clientes() {
                   <div className="carrossel-img-wrap">
                     <img src={logo.src} alt={logo.alt} draggable="false" />
                   </div>
-                  <span className="carrossel-nome">{logo.nome}</span>
                 </div>
               </div>
             ))}
@@ -168,12 +233,41 @@ export default function Clientes() {
                   playsInline
                 />
               </div>
+              <div className="souza-video-wrap-cortina" ref={videoCortinaRef}>
+                <video
+                  className="souza-video-cortina"
+                  src="video.mp4"
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                />
+              </div>
+              <div className="souza-video-wrap-cortina souza-video-wrap-cortina-2" ref={videoCortina2Ref}>
+                <video
+                  className="souza-video-cortina"
+                  src="video.mp4"
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                />
+              </div>
 
               <span className="souza-metade souza-metade-esquerda" ref={souzaEsquerdaRef}>
                 SOU
               </span>
               <span className="souza-metade souza-metade-direita" ref={souzaDireitaRef}>
                 ZA
+              </span>
+              <span className="souza-video-texto" ref={texto1Ref}>
+                Manutenção Industrial
+              </span>
+              <span className="souza-video-texto" ref={texto2Ref}>
+                Montagem Especializada
+              </span>
+              <span className="souza-video-texto" ref={texto3Ref}>
+                Montagem de Portões
               </span>
 
             </div>

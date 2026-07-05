@@ -1,6 +1,3 @@
-/* ───────────────────────────────────────────
-   SEÇÃO CLIENTES
-─────────────────────────────────────────── */
 @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@900&display=swap');
 
 .clientes-secao {
@@ -14,10 +11,6 @@
   height: 100vh;
   width: 100%;
 }
-
-/* ═══════════════════════════════════════════
-   CARROSSEL
-   ═══════════════════════════════════════════ */
 
 .carrossel-viewport {
   width: 100%;
@@ -53,16 +46,10 @@
 .carrossel-card {
   width: 160px;
   border-radius: 20px;
-  border: 1px solid #0a2e0a;
   overflow: hidden;
   display: flex;
   flex-direction: column;
   align-items: center;
-  transition: border-color 0.25s ease;
-}
-
-.carrossel-card:hover {
-  border-color: rgba(255, 255, 255, 0.18);
 }
 
 .carrossel-img-wrap {
@@ -82,22 +69,7 @@
   display: block;
   user-select: none;
   pointer-events: none;
-}
-
-.carrossel-nome {
-  width: 100%;
-  padding: 10px 12px 14px;
-  text-align: center;
-  font-family: 'Cy Grotesk Wide', sans-serif;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.55);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  box-sizing: border-box;
+  filter: grayscale(100%);
 }
 
 /* ── Label ── */
@@ -119,7 +91,6 @@
   display: block;
 }
 
-/* ── SOUZA gigante ── */
 .clientes-titulo-wrap {
   width: 100%;
   text-align: center;
@@ -154,10 +125,6 @@
     gap: 12px;
   }
 }
-
-/* ═══════════════════════════════════════════
-   SOUZA SPLIT — efeito de abertura no scroll
-   ═══════════════════════════════════════════ */
 
 .clientes-souza-split-root {
   position: relative;
@@ -195,6 +162,7 @@
   z-index: 1;
   pointer-events: none;
   clip-path: inset(0 50% 0 50%);
+  will-change: transform, filter;
 }
 
 .souza-video {
@@ -203,4 +171,55 @@
   object-fit: cover;
   object-position: center center;
   display: block;
+}
+
+.souza-video-wrap-cortina {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  z-index: 3;
+  pointer-events: none;
+  transform: translateY(115vh); 
+  will-change: transform;
+}
+
+.souza-video-cortina {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+  display: block;
+}
+
+.souza-video-wrap-cortina-2 {
+  z-index: 4;
+}
+
+.souza-video-texto {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  max-width: min(80%, 640px);
+  z-index: 10;
+  font-family: 'Cy Grotesk Wide', sans-serif;
+  font-weight: 700;
+  font-size: clamp(11px, 1.6vw, 22px);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-align: center;
+  color: #ffffff;
+  white-space: nowrap;
+  pointer-events: none;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.55);
+}
+
+@media (max-width: 768px) {
+  .souza-video-texto {
+    font-size: clamp(9px, 3vw, 14px);
+    white-space: normal;
+  }
 }

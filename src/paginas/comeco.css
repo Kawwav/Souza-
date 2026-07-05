@@ -62,7 +62,6 @@
   white-space: nowrap;
 }
 
-/* ── Rastro (atrás da imagem industrial) ── */
 .comeco-rastro {
   position: absolute;
   inset: 0;
@@ -89,7 +88,6 @@
   transition: none;
 }
 
-/* ── Fundo imagem ── */
 .comeco-fundo {
   position: absolute;
   inset: 0;

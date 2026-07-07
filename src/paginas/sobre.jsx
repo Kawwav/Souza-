@@ -153,7 +153,7 @@ export default function Sobre() {
   }, [updateClip]);
 
   return (
-    <section className="secao-sobre" ref={sectionRef}>
+    <section className="secao-sobre" id="sobre" ref={sectionRef}>
       <div className="sobre-sticky">
 
         {/* TÍTULO FINAL — aparece no topo após os cards virarem */}

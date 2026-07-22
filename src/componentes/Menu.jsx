@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import "../paginas/comeco.css";
+import "../componentes/Menu.css";
 
 const ITENS_MENU = [
   { label: "Home", destino: "home" },
@@ -10,11 +10,8 @@ const ITENS_MENU = [
 
 export default function MenuHamburguer({ aoNavegar, visivel = true }) {
   const [menuAberto, setMenuAberto] = useState(false);
-  const [faseMarrelo, setFaseMarrelo] = useState(null); // null | 'descendo' | 'batendo' | 'subindo'
-  const [sacudindo, setSacudindo] = useState(false);
   const [ativo, setAtivo] = useState("home");
 
-  // ── Scroll-spy: observa as seções da página pra saber onde estamos
   useEffect(() => {
     const ids = ITENS_MENU.map((item) => item.destino);
     const els = ids
@@ -35,15 +32,7 @@ export default function MenuHamburguer({ aoNavegar, visivel = true }) {
     return () => observer.disconnect();
   }, []);
 
-  const abrirOuFechar = () => {
-    if (menuAberto) { setMenuAberto(false); return; }
-    // Sequência do martelo: desce devagar → pausa → bate → hambúrguer abre → martelo sobe
-    setFaseMarrelo("descendo");
-    setTimeout(() => setFaseMarrelo("batendo"), 700);
-    setTimeout(() => { setSacudindo(true); setMenuAberto(true); }, 950);
-    setTimeout(() => { setFaseMarrelo("subindo"); setSacudindo(false); }, 1150);
-    setTimeout(() => setFaseMarrelo(null), 1700);
-  };
+  const abrirOuFechar = () => setMenuAberto((atual) => !atual);
 
   const irPara = (destino) => {
     setMenuAberto(false);
@@ -52,60 +41,94 @@ export default function MenuHamburguer({ aoNavegar, visivel = true }) {
 
   return (
     <>
-      {faseMarrelo && (
-        <img
-          src="martelo.png"
-          alt=""
-          aria-hidden="true"
-          className={`comeco-martelo comeco-martelo--${faseMarrelo}`}
-        />
-      )}
-
-      <button
-        className={`comeco-hamburguer ${menuAberto ? "comeco-hamburguer--aberto" : ""} ${visivel ? "comeco-hamburguer--visivel" : ""} ${sacudindo ? "comeco-hamburguer--sacudindo" : ""}`}
-        onClick={abrirOuFechar}
-        aria-label={menuAberto ? "Fechar menu" : "Abrir menu"}
-      >
-        <span className="comeco-hamburguer__linha" />
-        <span className="comeco-hamburguer__linha" />
-        <span className="comeco-hamburguer__linha" />
-      </button>
       <div
-        className={`comeco-menu-overlay ${menuAberto ? "comeco-menu-overlay--ativo" : ""}`}
+        className={`comeco-btn comeco-btn-hamburguer ${menuAberto ? "comeco-btn-hamburguer--ativo" : ""} ${visivel ? "comeco-btn-hamburguer--visivel" : ""}`}
+      >
+        <button
+          className="comeco-btn-click comeco-magnetic"
+          onClick={abrirOuFechar}
+          aria-label={menuAberto ? "Fechar menu" : "Abrir menu"}
+        >
+          <div className="comeco-btn-fill" aria-hidden="true" />
+          <div className="comeco-btn-text">
+            <div className="comeco-btn-bars" aria-hidden="true" />
+            <span className="comeco-btn-text-inner">Menu</span>
+          </div>
+        </button>
+      </div>
+
+      <div
+        className={`comeco-fixed-nav-back ${menuAberto ? "comeco-fixed-nav-back--ativo" : ""}`}
         onClick={() => setMenuAberto(false)}
         aria-hidden="true"
       />
 
       <nav
-        className={`comeco-menu ${menuAberto ? "comeco-menu--aberto" : ""}`}
+        className={`comeco-fixed-nav ${menuAberto ? "comeco-fixed-nav--ativo" : ""}`}
         aria-label="Menu principal"
       >
-        <div className="comeco-menu__linha-deco" aria-hidden="true" />
-
-        <div className="comeco-menu__topo">
-          <span className="comeco-menu__rotulo">Navegação</span>
+        <div className="comeco-fixed-nav-rounded-div" aria-hidden="true">
+          <div className="comeco-rounded-div-wrap">
+            <div className="comeco-rounded-div" />
+          </div>
         </div>
 
-        <ul className="comeco-menu__lista">
-          {ITENS_MENU.map((item) => (
-            <li className="comeco-menu__item" key={item.destino}>
-              <a
-                href={`#${item.destino}`}
-                className={`comeco-menu__link ${ativo === item.destino ? "comeco-menu__link--ativo" : ""}`}
-                onClick={(e) => { e.preventDefault(); irPara(item.destino); }}
-              >
-                <span className="comeco-menu__ponto" aria-hidden="true" />
-                {item.label}
-              </a>
-            </li>
-          ))}
-        </ul>
+        <div className="comeco-fixed-nav-inner">
+          <div className="comeco-nav-row">
+            <h5 className="comeco-nav-titulo">Navegação</h5>
+            <div className="comeco-stripe" />
+            <ul className="comeco-links-wrap">
+              {ITENS_MENU.map((item, i) => (
+                <li
+                  className={`comeco-btn comeco-btn-link ${ativo === item.destino ? "comeco-btn-link--ativo" : ""}`}
+                  key={item.destino}
+                  style={{ transitionDelay: menuAberto ? `${0.03 + i * 0.03}s` : "0s" }}
+                >
+                  <a
+                    href={`#${item.destino}`}
+                    className="comeco-btn-click comeco-magnetic"
+                    onClick={(e) => { e.preventDefault(); irPara(item.destino); }}
+                  >
+                    <span className="comeco-btn-text">
+                      <span className="comeco-btn-text-inner">{item.label}</span>
+                    </span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
 
-        <div className="comeco-menu__rodape">
-          <span className="comeco-menu__rotulo">Redes sociais</span>
-          <div className="comeco-menu__socials">
-            <a href="https://instagram.com" target="_blank" rel="noreferrer">Instagram</a>
-            <a href="https://wa.me/554100000000" target="_blank" rel="noreferrer">WhatsApp</a>
+          <div className="comeco-social-row">
+            <div className="comeco-stripe" />
+            <div className="comeco-socials">
+              <h5 className="comeco-nav-titulo">Redes sociais</h5>
+              <ul>
+                <li className="comeco-btn comeco-btn-link comeco-btn-link--externo">
+                  <a
+                    href="https://instagram.com"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="comeco-btn-click comeco-magnetic"
+                  >
+                    <span className="comeco-btn-text">
+                      <span className="comeco-btn-text-inner">Instagram</span>
+                    </span>
+                  </a>
+                </li>
+                <li className="comeco-btn comeco-btn-link comeco-btn-link--externo">
+                  <a
+                    href="https://wa.me/554100000000"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="comeco-btn-click comeco-magnetic"
+                  >
+                    <span className="comeco-btn-text">
+                      <span className="comeco-btn-text-inner">WhatsApp</span>
+                    </span>
+                  </a>
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
       </nav>

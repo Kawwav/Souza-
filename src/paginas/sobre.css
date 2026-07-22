@@ -327,14 +327,3 @@
   color: rgba(197, 255, 197, 0.85);
   will-change: opacity, transform;
 }
-
-.sobre-titulo-final span {
-  background: radial-gradient(
-    circle at 50% 0%,
-    rgba(197, 255, 197, 0.95),
-    rgba(78, 146, 45, 0.9)
-  );
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}

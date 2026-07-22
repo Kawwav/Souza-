@@ -1,0 +1,305 @@
+:root {
+  --comeco-color-verde-escuro: #011901;
+  --comeco-color-branco: #FFFFFF;
+  --comeco-color-verde-claro: #548114;
+  --comeco-color-borda-clara: rgba(197, 255, 197, 0.2);
+  --comeco-gap-padding: clamp(1.5em, 4vw, 2.5em);
+  --comeco-animation-fast: all .3s cubic-bezier(.7, 0, .3, 1);
+}
+
+.comeco-btn-hamburguer {
+  position: fixed;
+  top: calc(var(--comeco-gap-padding) / 1.5);
+  right: calc(var(--comeco-gap-padding) / 1.5);
+  transition: transform .4s cubic-bezier(0.36, 0, 0.66, 0);
+  transform: scale(0) rotate(0.001deg);
+  z-index: 105;
+}
+
+.comeco-btn-hamburguer--visivel {
+  transition: transform .4s cubic-bezier(0.34, 1.5, 0.64, 1);
+  transform: scale(1) rotate(0.001deg);
+}
+
+.comeco-btn-click {
+  cursor: pointer;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--comeco-color-verde-escuro);
+  border-radius: 2.125em;
+  min-width: 1em;
+  padding: 0;
+  font-size: 1em;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  text-decoration: none;
+  will-change: transform;
+  transform: translateZ(0) rotate(0.001deg);
+}
+
+.comeco-btn-hamburguer .comeco-btn-click {
+  width: clamp(4em, 5.5vw, 5em);
+  height: clamp(4em, 5.5vw, 5em);
+  border-radius: 50%;
+  background-color: var(--comeco-color-verde-escuro);
+  transition: background-color .25s cubic-bezier(0.36, 0, 0.66, 0), box-shadow .25s cubic-bezier(0.36, 0, 0.66, 0);
+  box-shadow: inset 0 0 0 1px var(--comeco-color-borda-clara);
+}
+
+.comeco-btn-hamburguer--ativo .comeco-btn-click {
+  background-color: var(--comeco-color-verde-claro);
+  box-shadow: inset 0 0 0 1px transparent;
+}
+
+.comeco-btn-fill {
+  background: var(--comeco-color-verde-claro);
+  position: absolute;
+  width: 150%;
+  height: 200%;
+  border-radius: 50%;
+  top: -50%;
+  left: -25%;
+  transform: translate3d(0, -76%, 0);
+  will-change: transform;
+  transition: background-color ease-in-out .25s;
+}
+
+.comeco-btn-text {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  pointer-events: none;
+}
+
+.comeco-btn-hamburguer .comeco-btn-text-inner {
+  color: var(--comeco-color-branco);
+  opacity: 0;
+}
+
+.comeco-btn-bars {
+  position: absolute;
+  width: 28%;
+  height: 8%;
+  opacity: 1;
+}
+
+.comeco-btn-bars::before,
+.comeco-btn-bars::after {
+  content: "";
+  display: block;
+  position: absolute;
+  left: 50%;
+  height: 1px;
+  width: 100%;
+  transform: translate(-50%, -50%) rotate(0.001deg);
+  background: var(--comeco-color-branco);
+  transition: var(--comeco-animation-fast);
+}
+
+.comeco-btn-bars::before {
+  top: 0;
+  transform: translate(-50%, -50%);
+}
+
+.comeco-btn-bars::after {
+  top: 100%;
+  transform: translate(-50%, -50%);
+}
+
+.comeco-btn-hamburguer--ativo .comeco-btn-bars::before {
+  top: 50%;
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+.comeco-btn-hamburguer--ativo .comeco-btn-bars::after {
+  top: 50%;
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.comeco-fixed-nav-back {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(to right, hsla(220, 13%, 0%, .3) 40%, hsla(220, 13%, 0%, 1) 80%);
+  opacity: 0;
+  transition: opacity .8s cubic-bezier(.7, 0, .2, 1);
+  z-index: 100;
+  pointer-events: none;
+  will-change: opacity;
+}
+
+.comeco-fixed-nav-back--ativo {
+  opacity: .35;
+  pointer-events: all;
+}
+
+.comeco-fixed-nav {
+  position: fixed;
+  right: 0;
+  top: 0;
+  height: 100vh;
+  width: clamp(20em, 32vw, 28em);
+  background: var(--comeco-color-verde-escuro);
+  z-index: 100;
+  transform: translate(calc(100% + 6vw), 0) rotate(0.001deg);
+  transition: transform .8s cubic-bezier(.7, 0, .2, 1);
+  will-change: transform;
+}
+
+.comeco-fixed-nav--ativo {
+  transform: translate(0, 0) rotate(0.001deg);
+}
+
+.comeco-fixed-nav-inner {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+  padding: 15vh 7.5vw 10vh 7.5vw;
+  position: relative;
+}
+
+.comeco-nav-titulo {
+  margin-bottom: 3em;
+  color: var(--comeco-color-branco);
+  opacity: .5;
+  font-size: 1em;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+
+.comeco-links-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding-top: 5vh;
+  list-style: none;
+  margin: 0;
+  margin-left: calc(var(--comeco-gap-padding) / -2);
+}
+
+.comeco-stripe {
+  height: 1px;
+  width: 100%;
+  background: var(--comeco-color-borda-clara);
+}
+
+.comeco-btn-link {
+  margin-bottom: calc(var(--comeco-gap-padding) / 2);
+  transform: translate(15vw, 0) rotate(0.001deg);
+  transition: all .8s cubic-bezier(.7, 0, .2, 1);
+  will-change: transform;
+}
+
+.comeco-fixed-nav--ativo .comeco-btn-link {
+  transform: translate(0, 0) rotate(0.001deg);
+}
+
+.comeco-btn-link .comeco-btn-click {
+  height: auto;
+  padding: .25em 0;
+}
+
+.comeco-btn-link .comeco-btn-text-inner {
+  color: var(--comeco-color-branco);
+  font-size: calc(clamp(3.25em, 5vw, 4em) * .875);
+  line-height: 1.4;
+}
+
+.comeco-btn-link .comeco-btn-click::after {
+  content: "";
+  position: absolute;
+  left: calc(var(--comeco-gap-padding) / -4);
+  top: 50%;
+  width: calc(clamp(16px, 1.2vw, 19px) / 1.65);
+  height: calc(clamp(16px, 1.2vw, 19px) / 1.65);
+  border-radius: 50%;
+  background: var(--comeco-color-branco);
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0);
+  transition: var(--comeco-animation-fast);
+}
+
+.comeco-btn-link--ativo .comeco-btn-click::after,
+.comeco-btn-link .comeco-btn-click:hover::after {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.comeco-social-row {
+  margin-left: calc(var(--comeco-gap-padding) / -4);
+}
+
+.comeco-socials ul {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.comeco-btn-link--externo .comeco-btn-text-inner {
+  font-size: 1.1em;
+  opacity: .8;
+}
+
+.comeco-fixed-nav-rounded-div {
+  position: absolute;
+  left: 1px;
+  transform: translateX(-100%);
+  height: 100%;
+  top: 0;
+}
+
+.comeco-rounded-div-wrap {
+  width: 6vw;
+  height: 100%;
+  transition: all .85s cubic-bezier(.7, 0, .2, 1);
+  will-change: width;
+  overflow: hidden;
+  position: relative;
+}
+
+.comeco-fixed-nav--ativo .comeco-rounded-div-wrap {
+  width: 0vw;
+}
+
+.comeco-rounded-div {
+  background: var(--comeco-color-verde-escuro);
+  height: 150%;
+  content: "";
+  display: block;
+  position: absolute;
+  width: 775%;
+  top: 50%;
+  border-radius: 50%;
+  transform: translate(-6.5%, -50%);
+}
+
+@media screen and (max-width: 540px) {
+  .comeco-fixed-nav-back--ativo {
+    background: hsla(220, 13%, 5%, 1);
+  }
+
+  .comeco-fixed-nav {
+    width: 100%;
+    transform: translate(calc(100% + 20vw), 0) rotate(0.001deg);
+  }
+
+  .comeco-fixed-nav-inner {
+    height: 100dvh;
+    padding: 15vh 6vw 5vh 6vw;
+  }
+
+  .comeco-btn-link .comeco-btn-click::after {
+    left: auto;
+    right: .4em;
+  }
+}

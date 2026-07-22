@@ -28,11 +28,13 @@ function EngrenagemQuadrante({ quadrante, fase }) {
   );
 }
 
-export default function Comeco({ aoNavegar }) {
-  const [fase, setFase] = useState("visivel");
-  const [faseFundo, setFaseFundo] = useState("baixo");
+export default function Comeco({ aoNavegar, pularIntro = false }) {
+  // Quando voltamos da página de Trabalhos, pulamos a introdução (tela
+  // verde) e já nascemos no estado "final" dela.
+  const [fase, setFase] = useState(pularIntro ? "sumiu" : "visivel");
+  const [faseFundo, setFaseFundo] = useState(pularIntro ? "chegou" : "baixo");
   const [faseTexto, setFaseTexto] = useState("escondido");
-  const [hamburgerVisivel, setHamburgerVisivel] = useState(false);
+  const [hamburgerVisivel, setHamburgerVisivel] = useState(pularIntro);
 
   const scrollWrapperRef = useRef(null);
   const rafRef           = useRef(null);
@@ -51,6 +53,10 @@ export default function Comeco({ aoNavegar }) {
   const textoVisivelRef  = useRef(false); // se o texto SOUZA já está mostrado
 
   useEffect(() => {
+    // Já chegamos no estado final (voltando de Trabalhos) — não roda a
+    // sequência de animação da intro nem trava o scroll do body.
+    if (pularIntro) return;
+
     document.body.style.overflow = "hidden";
 
     const t1 = setTimeout(() => setFase("subindo"), 4000);
@@ -226,7 +232,7 @@ return (
         <canvas ref={canvasRef} className="comeco-fundo__video" />
       </div>
 
-      {/* ── Indicador "role para baixo" — aparece depois da intro ── */}
+      {/*Indicadorrole para baixo */}
       <div
         ref={scrollHintRef}
         className={`comeco-scroll-hint ${faseFundo === "chegou" ? "comeco-scroll-hint--visivel" : ""}`}

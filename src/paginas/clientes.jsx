@@ -94,17 +94,57 @@ export default function Clientes() {
     if (texto1) gsap.set(texto1, { opacity: 0, y: 10 });
     if (texto2) gsap.set(texto2, { opacity: 0, y: 10 });
     if (texto3) gsap.set(texto3, { opacity: 0, y: 10 });
-    const atualizarClip = () => {
+    // Guarda a posição/largura "de repouso" (xPercent = 0) de cada metade.
+    // Medido só quando necessário (mount/resize/refresh) — nunca durante o scroll.
+    let baseRects = null;
+
+    const medirBase = () => {
       const rootEl = videoWrap.parentElement;
       if (!rootEl) return;
+
+      const prevEsq = gsap.getProperty(esquerda, "xPercent");
+      const prevDir = gsap.getProperty(direita, "xPercent");
+
+      // zera temporariamente para medir a posição de repouso
+      gsap.set([esquerda, direita], { xPercent: 0 });
+
       const rootRect = rootEl.getBoundingClientRect();
       const esqRect  = esquerda.getBoundingClientRect();
       const dirRect  = direita.getBoundingClientRect();
-      const clipLeft  = Math.max(0, esqRect.right  - rootRect.left);
-      const clipRight = Math.max(0, rootRect.right  - dirRect.left);
+
+      baseRects = {
+        rootWidth: rootRect.width,
+        esqRight: esqRect.right - rootRect.left, // borda direita de "SOU" em repouso
+        esqWidth: esqRect.width,
+        dirLeft: dirRect.left - rootRect.left,    // borda esquerda de "ZA" em repouso
+        dirWidth: dirRect.width,
+      };
+
+      // devolve para a posição atual da timeline
+      gsap.set(esquerda, { xPercent: prevEsq });
+      gsap.set(direita,  { xPercent: prevDir });
+    };
+
+    const atualizarClip = () => {
+      if (!baseRects) return;
+
+      // xPercent já é o valor exato que está movendo as letras nesse frame —
+      // usar o mesmo número para o clip garante 0% de defasagem com a palavra.
+      const xpEsq = gsap.getProperty(esquerda, "xPercent");
+      const xpDir = gsap.getProperty(direita, "xPercent");
+
+      const clipLeft = Math.max(
+        0,
+        baseRects.esqRight + (xpEsq / 100) * baseRects.esqWidth
+      );
+      const clipRight = Math.max(
+        0,
+        baseRects.rootWidth - (baseRects.dirLeft + (xpDir / 100) * baseRects.dirWidth)
+      );
+
       videoWrap.style.clipPath = `inset(0 ${clipRight}px 0 ${clipLeft}px)`;
       const left  = `${clipLeft}px`;
-      const width = `${Math.max(0, rootRect.width - clipLeft - clipRight)}px`;
+      const width = `${Math.max(0, baseRects.rootWidth - clipLeft - clipRight)}px`;
 
       if (videoCortina) {
         videoCortina.style.left  = left;
@@ -116,6 +156,19 @@ export default function Clientes() {
       }
     };
 
+    // espera a fonte Barlow Condensed carregar antes de medir,
+    // senão a largura de "SOU"/"ZA" fica errada e o clip nasce desalinhado
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(() => {
+        medirBase();
+        atualizarClip();
+        ScrollTrigger.refresh();
+      });
+    } else {
+      medirBase();
+    }
+
+    medirBase();
     atualizarClip();
 
     const tl = gsap.timeline({
@@ -127,7 +180,10 @@ export default function Clientes() {
         pin: secao,
         anticipatePin: 1,
         onUpdate: atualizarClip,
-        onRefresh: atualizarClip,
+        onRefresh: () => {
+          medirBase();
+          atualizarClip();
+        },
       },
     });
 
@@ -184,6 +240,7 @@ export default function Clientes() {
 
     // Recalcula em resize (mudança de largura de tela desloca as letras)
     const onResize = () => {
+      medirBase();
       ScrollTrigger.refresh();
       atualizarClip();
     };

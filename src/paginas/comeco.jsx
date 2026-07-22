@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import MenuHamburguer from "../componentes/menu";
 import "./comeco.css";
 
@@ -31,8 +31,24 @@ function EngrenagemQuadrante({ quadrante, fase }) {
 export default function Comeco({ aoNavegar }) {
   const [fase, setFase] = useState("visivel");
   const [faseFundo, setFaseFundo] = useState("baixo");
-  const [faseTexto, setFaseTexto] = useState("visivel");
+  const [faseTexto, setFaseTexto] = useState("escondido");
   const [hamburgerVisivel, setHamburgerVisivel] = useState(false);
+
+  const scrollWrapperRef = useRef(null);
+  const rafRef           = useRef(null);
+
+  // ── Sequência de imagens que substitui o vídeo ──
+  // Ajuste TOTAL_FRAMES pro número real de arquivos gerados pelo ffmpeg
+  // (veja o comando de extração nas instruções). O nome dos arquivos segue
+  // o padrão frame-0001.jpg, frame-0002.jpg, ...
+  const TOTAL_FRAMES = 141;
+  const framesRef        = useRef([]);   // array de objetos Image()
+  const carregadosRef    = useRef(0);
+  const canvasRef        = useRef(null);
+  const scrollHintRef    = useRef(null);
+  const frameAtualRef    = useRef(-1);   // último índice desenhado (evita redesenhar à toa)
+  const progressoRef     = useRef(0);    // progresso suavizado (0 a 1)
+  const textoVisivelRef  = useRef(false); // se o texto SOUZA já está mostrado
 
   useEffect(() => {
     document.body.style.overflow = "hidden";
@@ -40,7 +56,6 @@ export default function Comeco({ aoNavegar }) {
     const t1 = setTimeout(() => setFase("subindo"), 4000);
     const t4 = setTimeout(() => {
       setFaseFundo("subindo");
-      setFaseTexto("subindo");
     }, 5000);
     const t2 = setTimeout(() => setFase("sumiu"), 7300);
     const t3 = setTimeout(() => {
@@ -56,20 +71,142 @@ export default function Comeco({ aoNavegar }) {
     };
   }, []);
 
+  // ── Pré-carrega todas as imagens da sequência assim que o componente monta ──
+  useEffect(() => {
+    let cancelado = false;
+    const imgs = [];
+
+    for (let i = 1; i <= TOTAL_FRAMES; i++) {
+      const img = new Image();
+      const num = String(i).padStart(4, "0");
+      img.src = `${import.meta.env.BASE_URL}frames/frame-${num}.jpg`;
+      img.onload = () => {
+        if (cancelado) return;
+        carregadosRef.current += 1;
+        // assim que a primeira imagem chega, já desenha algo em vez de
+        // deixar o canvas em branco
+        if (carregadosRef.current === 1) desenharFrame(0);
+      };
+      imgs.push(img);
+    }
+    framesRef.current = imgs;
+
+    return () => { cancelado = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // ── Desenha a imagem de índice `progresso` (0 a 1) no canvas, imitando
+  // object-fit: cover + object-position: 70% -70px ──
+  const desenharFrame = useCallback((progresso) => {
+    const canvas = canvasRef.current;
+    const frames = framesRef.current;
+    if (!canvas || !frames.length) return;
+
+    const indice = Math.round(progresso * (frames.length - 1));
+    if (indice === frameAtualRef.current) return; // já é o frame desenhado
+
+    const img = frames[indice];
+    if (!img || !img.complete || !img.naturalWidth) return; // ainda não carregou
+
+    frameAtualRef.current = indice;
+
+    const ctx = canvas.getContext("2d");
+    const cw = canvas.width;
+    const ch = canvas.height;
+    const iw = img.naturalWidth;
+    const ih = img.naturalHeight;
+
+    // mesma lógica do object-fit: cover
+    const escala = Math.max(cw / iw, ch / ih);
+    const w = iw * escala;
+    const h = ih * escala;
+
+    // object-position: 70% -70px (horizontal em %, vertical em px fixo)
+    const posX = 0.7;
+    const deslocY = 40 * (window.devicePixelRatio || 1);
+
+    let x = (cw - w) * posX;
+    let y = (ch - h) / 2 + deslocY;
+
+    ctx.clearRect(0, 0, cw, ch);
+    ctx.drawImage(img, x, y, w, h);
+  }, []);
+
+  // ── Ajusta a resolução do canvas ao tamanho real na tela (nítido em telas retina) ──
+  const ajustarTamanhoCanvas = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width  = canvas.clientWidth * dpr;
+    canvas.height = canvas.clientHeight * dpr;
+    frameAtualRef.current = -1; // força redesenhar no próximo frame
+  }, []);
+
+  const calcularProgressoAlvo = useCallback(() => {
+    const wrapper = scrollWrapperRef.current;
+    if (!wrapper) return 0;
+
+    const topoWrapper = wrapper.getBoundingClientRect().top + window.scrollY;
+    const percorrido  = window.scrollY - topoWrapper;
+    const totalScroll = wrapper.offsetHeight - window.innerHeight;
+    return Math.min(Math.max(percorrido / totalScroll, 0), 1);
+  }, []);
+
+  // Loop contínuo em rAF: lê o scroll a cada frame e desenha a imagem
+  // correspondente no canvas. Como drawImage é instantâneo (a imagem já
+  // está em memória), não existe mais o delay de seek do vídeo — o
+  // resultado acompanha o dedo/scroll sem travar.
+  useEffect(() => {
+    ajustarTamanhoCanvas();
+    window.addEventListener("resize", ajustarTamanhoCanvas, { passive: true });
+
+    const loop = () => {
+      const alvo  = calcularProgressoAlvo();
+      const atual = progressoRef.current;
+      const diff  = alvo - atual;
+
+      // suavização leve só pra tirar o serrilhado de scrolls com "soquinho"
+      // (ex: trackpad/mouse wheel); pode subir pra 0.35~0.5 se quiser mais
+      // "colado" ainda no dedo, ou baixar pra algo mais cinematográfico
+      const FATOR_SUAVIZACAO = 0.25;
+      const novo = Math.abs(diff) < 0.0015 ? alvo : atual + diff * FATOR_SUAVIZACAO;
+      progressoRef.current = novo;
+
+      desenharFrame(novo);
+
+      // ── Indicador "role para baixo" some assim que o scroll começa ──
+      if (scrollHintRef.current) {
+        scrollHintRef.current.classList.toggle("comeco-scroll-hint--escondido", novo > 0.03);
+      }
+
+      // ── Texto "SOUZA / MONTAGEM INDUSTRIAL" aparece perto do final do
+      // scroll das imagens (ajuste LIMIAR_TEXTO pra mudar o ponto exato) ──
+      const LIMIAR_TEXTO = 0.55; // 0.85 = aparece nos últimos 15% do scroll
+      const deveAparecer = novo >= LIMIAR_TEXTO;
+      if (deveAparecer !== textoVisivelRef.current) {
+        textoVisivelRef.current = deveAparecer;
+        setFaseTexto(deveAparecer ? "subindo" : "saindo");
+      }
+
+      rafRef.current = requestAnimationFrame(loop);
+    };
+
+    rafRef.current = requestAnimationFrame(loop);
+    return () => {
+      window.removeEventListener("resize", ajustarTamanhoCanvas);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+  }, [calcularProgressoAlvo, desenharFrame, ajustarTamanhoCanvas]);
+
   const fundoClasse = [
     "comeco-fundo",
     faseFundo === "subindo" ? "comeco-fundo--subindo" : "",
     faseFundo === "chegou"  ? "comeco-fundo--chegou"  : "",
   ].filter(Boolean).join(" ");
 
-  const rastroClasse = [
-    "comeco-rastro",
-    faseFundo === "subindo" ? "comeco-rastro--subindo" : "",
-    faseFundo === "chegou"  ? "comeco-rastro--chegou"  : "",
-  ].filter(Boolean).join(" ");
-
 return (
-    <section id="home" style={{ height: "100vh", position: "relative" }}>
+    <div ref={scrollWrapperRef} style={{ position: "relative", height: "300vh" }}>
+    <section id="home" style={{ height: "100vh", position: "sticky", top: 0, overflow: "hidden" }}>
       {/* ── Menu hambúrguer (compartilhado com a página de Trabalhos) ── */}
       <MenuHamburguer aoNavegar={aoNavegar} visivel={hamburgerVisivel} />
 
@@ -84,11 +221,22 @@ return (
         </div>
       </div>
 
-      {/* ── Rastro (z-index 1, atrás do industrial) ── */}
-      <div className={rastroClasse} aria-hidden="true" />
+      {/* ── Sequência de imagens do fundo (z-index 2) — avança só com o scroll ── */}
+      <div className={fundoClasse} aria-hidden="true">
+        <canvas ref={canvasRef} className="comeco-fundo__video" />
+      </div>
 
-      {/* ── Imagem industrial (z-index 2) ── */}
-      <div className={fundoClasse} aria-hidden="true" />
+      {/* ── Indicador "role para baixo" — aparece depois da intro ── */}
+      <div
+        ref={scrollHintRef}
+        className={`comeco-scroll-hint ${faseFundo === "chegou" ? "comeco-scroll-hint--visivel" : ""}`}
+        aria-hidden="true"
+      >
+        <span className="comeco-scroll-hint__texto">Role para explorar</span>
+        <span className="comeco-scroll-hint__mouse">
+          <span className="comeco-scroll-hint__ponto" />
+        </span>
+      </div>
 
       {/* ── Overlay verde ── */}
       {fase !== "sumiu" && (
@@ -123,5 +271,6 @@ return (
 
 
     </section>
+    </div>
   );
 }

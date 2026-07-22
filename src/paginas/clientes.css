@@ -162,7 +162,7 @@
   z-index: 1;
   pointer-events: none;
   clip-path: inset(0 50% 0 50%);
-  will-change: transform, filter;
+  will-change: transform, filter, clip-path;
 }
 
 .souza-video {

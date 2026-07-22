@@ -1,5 +1,4 @@
 import { useState, useRef, useEffect } from "react";
-import MenuHamburguer from "../componentes/menu";
 import "./trabalhos.css";
 
 // TODO: substitua pelos trabalhos reais da Souza
@@ -58,7 +57,7 @@ const DURACAO_SAIDA = 850;   // precisa bater com trabalhosItemSai no CSS
 const DURACAO_ENTRADA = 1000; // precisa bater com trabalhosItemEntra no CSS
 const ATRASO_POR_ITEM = 60;  // precisa bater com --i * 60ms no CSS
 
-export default function Trabalhos({ aoNavegar }) {
+export default function Trabalhos() {
   const [visao, setVisao] = useState("lista");         // visão alvo (usada nos botões ativos)
   const [visaoExibida, setVisaoExibida] = useState("lista"); // o que está de fato renderizado
   const [fase, setFase] = useState("idle"); // "idle" | "saindo" | "entrando"
@@ -165,9 +164,6 @@ export default function Trabalhos({ aoNavegar }) {
 
   return (
     <section className="trabalhos-secao" id="trabalhos">
-
-      {/* ── Menu hambúrguer (mesmo da página inicial) ── */}
-      <MenuHamburguer aoNavegar={aoNavegar} visivel={true} />
 
       {/* ── Topo: título + botões de visão ── */}
       <div className="trabalhos-topo">

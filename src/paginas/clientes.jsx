@@ -1,4 +1,4 @@
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useCallback } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import "./clientes.css";
@@ -16,6 +16,8 @@ const LOGOS = [
   { src: "newholland.png", alt: "New Holland"},
 ];
 
+const TOTAL_FRAMES = 126;
+
 export default function Clientes() {
   const secaoRef         = useRef(null);
   const wrapperRef       = useRef(null);
@@ -30,6 +32,77 @@ export default function Clientes() {
   const texto1Ref        = useRef(null);
   const texto2Ref        = useRef(null);
   const texto3Ref        = useRef(null);
+  const canvasPrincipalRef = useRef(null);
+  const canvasCortinaRef   = useRef(null);
+  const canvasCortina2Ref  = useRef(null);
+  const framesRef     = useRef([]); 
+  const carregadosRef = useRef(0);
+  const progressoRef  = useRef(0);  
+  const ajustarCanvas = useCallback((canvas) => {
+    if (!canvas) return;
+    const dpr = window.devicePixelRatio || 1;
+    const w = Math.max(1, Math.round(canvas.clientWidth * dpr));
+    const h = Math.max(1, Math.round(canvas.clientHeight * dpr));
+    if (canvas.width !== w || canvas.height !== h) {
+      canvas.width = w;
+      canvas.height = h;
+    }
+  }, []);
+
+  const desenharEmCanvas = useCallback((canvas, img) => {
+    if (!canvas || !img || !img.complete || !img.naturalWidth) return;
+    ajustarCanvas(canvas);
+    const ctx = canvas.getContext("2d");
+    const cw = canvas.width;
+    const ch = canvas.height;
+    const iw = img.naturalWidth;
+    const ih = img.naturalHeight;
+
+    const escala = Math.max(cw / iw, ch / ih);
+    const w = iw * escala;
+    const h = ih * escala;
+    const x = (cw - w) / 2;
+    const y = (ch - h) / 2;
+
+    ctx.clearRect(0, 0, cw, ch);
+    ctx.drawImage(img, x, y, w, h);
+  }, [ajustarCanvas]);
+
+  const desenharFrame = useCallback((progresso) => {
+    const frames = framesRef.current;
+    if (!frames.length) return;
+
+    const p = Math.min(Math.max(progresso, 0), 1);
+    progressoRef.current = p;
+
+    const indice = Math.round(p * (frames.length - 1));
+    const img = frames[indice];
+    if (!img || !img.complete || !img.naturalWidth) return;
+
+    desenharEmCanvas(canvasPrincipalRef.current, img);
+    desenharEmCanvas(canvasCortinaRef.current, img);
+    desenharEmCanvas(canvasCortina2Ref.current, img);
+  }, [desenharEmCanvas]);
+
+  useEffect(() => {
+    let cancelado = false;
+    const imgs = [];
+
+    for (let i = 1; i <= TOTAL_FRAMES; i++) {
+      const img = new Image();
+      const num = String(i).padStart(4, "0");
+      img.src = `${import.meta.env.BASE_URL}frames-clientes/frame-${num}.jpg`;
+      img.onload = () => {
+        if (cancelado) return;
+        carregadosRef.current += 1;
+        if (carregadosRef.current === 1) desenharFrame(0);
+      };
+      imgs.push(img);
+    }
+    framesRef.current = imgs;
+
+    return () => { cancelado = true; };
+  }, [desenharFrame]);
 
   useEffect(() => {
     const track = trackRef.current;
@@ -128,8 +201,6 @@ export default function Clientes() {
     const atualizarClip = () => {
       if (!baseRects) return;
 
-      // xPercent já é o valor exato que está movendo as letras nesse frame —
-      // usar o mesmo número para o clip garante 0% de defasagem com a palavra.
       const xpEsq = gsap.getProperty(esquerda, "xPercent");
       const xpDir = gsap.getProperty(direita, "xPercent");
 
@@ -154,6 +225,10 @@ export default function Clientes() {
         videoCortina2.style.left  = left;
         videoCortina2.style.width = width;
       }
+
+      // as cortinas mudam de largura a cada tick — redesenha o frame atual
+      // nos 3 canvases pra acompanhar a nova resolução/enquadramento
+      desenharFrame(progressoRef.current);
     };
 
     // espera a fonte Barlow Condensed carregar antes de medir,
@@ -179,10 +254,17 @@ export default function Clientes() {
         scrub: 1.2,
         pin: secao,
         anticipatePin: 1,
-        onUpdate: atualizarClip,
-        onRefresh: () => {
+        onUpdate: (self) => {
+          atualizarClip();
+          // sincroniza o "vídeo" (sequência de frames) com o progresso
+          // suavizado do scrub — mesmo princípio da Comeco, mas usando o
+          // progresso que o próprio GSAP já calcula
+          desenharFrame(self.progress);
+        },
+        onRefresh: (self) => {
           medirBase();
           atualizarClip();
+          desenharFrame(self.progress);
         },
       },
     });
@@ -238,7 +320,8 @@ export default function Clientes() {
       tl.to(texto3, { opacity: 1, y: 0, ease: "power2.out", duration: 0.3 }, 3.5);
     }
 
-    // Recalcula em resize (mudança de largura de tela desloca as letras)
+    // Recalcula em resize (mudança de largura de tela desloca as letras
+    // e muda a resolução necessária dos canvases)
     const onResize = () => {
       medirBase();
       ScrollTrigger.refresh();
@@ -251,7 +334,7 @@ export default function Clientes() {
       tl.kill();
       ScrollTrigger.getAll().forEach((st) => st.kill());
     };
-  }, []);
+  }, [desenharFrame]);
 
   return (
     <div ref={wrapperRef} style={{ position: "relative", height: "630vh", backgroundColor: "#011901" }}>
@@ -281,34 +364,13 @@ export default function Clientes() {
             <div className="clientes-titulo-souza clientes-souza-split-root">
 
               <div className="souza-video-wrap" ref={videoWrapRef}>
-                <video
-                  className="souza-video"
-                  src="video.mp4"
-                  autoPlay
-                  muted
-                  loop
-                  playsInline
-                />
+                <canvas className="souza-video" ref={canvasPrincipalRef} />
               </div>
               <div className="souza-video-wrap-cortina" ref={videoCortinaRef}>
-                <video
-                  className="souza-video-cortina"
-                  src="video.mp4"
-                  autoPlay
-                  muted
-                  loop
-                  playsInline
-                />
+                <canvas className="souza-video-cortina" ref={canvasCortinaRef} />
               </div>
               <div className="souza-video-wrap-cortina souza-video-wrap-cortina-2" ref={videoCortina2Ref}>
-                <video
-                  className="souza-video-cortina"
-                  src="video.mp4"
-                  autoPlay
-                  muted
-                  loop
-                  playsInline
-                />
+                <canvas className="souza-video-cortina" ref={canvasCortina2Ref} />
               </div>
 
               <span className="souza-metade souza-metade-esquerda" ref={souzaEsquerdaRef}>
